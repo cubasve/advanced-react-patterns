@@ -29,6 +29,49 @@ function toggleReducer(state, {type, initialState}) {
   }
 }
 
+function useControlledSwitchWarning(
+  controlPropValue,
+  controlPropName,
+  componentName,
+) {
+  const isControlled = controlPropValue !== null
+  const {current: wasControlled} = React.useRef(isControlled)
+  React.useEffect(() => {
+    warning(
+      !(isControlled && !wasControlled),
+      'changing from uncontrolled to controlled',
+    )
+
+    warning(
+      !(!isControlled && wasControlled),
+      'changing from controlled to uncontrolled',
+    )
+  }, [isControlled, wasControlled])
+}
+
+function useOnChangeReadOnlyWarning(
+  controlPropValue,
+  controlPropName,
+  componentName,
+  hasOnChange,
+  readOnly,
+  readOnlyProp,
+  initialValueProp,
+  onChangeProp,
+) {
+  const isControlled = controlPropValue !== null
+  React.useEffect(() => {
+    // warning(false, 'This will log')
+    warning(!(hasOnChange && isControlled && !readOnly), 'Something bad!')
+    /*
+    EQUIVALENT TO ABOVE
+    if (hasOnChange && onIsControlled && !readOnly) {
+      console.error('Something bad')
+    }
+    */
+  }, [hasOnChange, isControlled, readOnly])
+}
+
 function useToggle({
   initialOn = false,
   reducer = toggleReducer,
@@ -49,30 +92,21 @@ function useToggle({
   // `onIsControlled`, otherwise, it should be `state.on`.
   const on = onIsControlled ? controlledOn : state.on
 
-  const {current: onWasControlled} = React.useRef(onIsControlled)
-  React.useEffect(() => {
-    warning(
-      !(onIsControlled && !onWasControlled),
-      'changing from uncontrolled to controlled',
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useControlledSwitchWarning(controlledOn, 'on', 'useToggle')
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useOnChangeReadOnlyWarning(
+      controlledOn,
+      'on',
+      'useToggle',
+      Boolean(onChange),
+      readOnly,
+      'readOnly',
+      'initialOn',
+      'onChange',
     )
-
-    warning(
-      !(!onIsControlled && onWasControlled),
-      'changing from controlled to uncontrolled',
-    )
-  }, [onIsControlled, onWasControlled])
-
-  const hasOnChange = Boolean(onChange)
-  React.useEffect(() => {
-    // warning(false, 'This will log')
-    warning(!(hasOnChange && onIsControlled && !readOnly), 'Something bad!')
-    /*
-    EQUIVALENT TO ABOVE
-    if (hasOnChange && onIsControlled && !readOnly) {
-      console.error('Something bad')
-    }
-    */
-  }, [hasOnChange, onIsControlled, readOnly])
+  }
 
   // We want to call `onChange` any time we need to make a state change, but we
   // only want to call `dispatch` if `!onIsControlled` (otherwise we could get
