@@ -4,8 +4,6 @@
 import * as React from 'react'
 import {Switch} from '../switch'
 
-const allowedTypes = [ToggleOn, ToggleOff, ToggleButton]
-
 function Toggle({children}) {
   const [on, setOn] = React.useState(false)
   const toggle = () => setOn(!on)
@@ -46,6 +44,8 @@ const ToggleOff = ({on, children}) => (on ? null : children)
 
 // Accepts `on` and `toggle` props and returns the <Switch /> with those props.
 const ToggleButton = ({on, toggle}) => <Switch on={on} onClick={toggle} />
+
+const allowedTypes = [ToggleOn, ToggleOff, ToggleButton]
 
 function App() {
   return (
